@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SQL Formatter — 纯前端 SQL 格式化工具</title>
+<meta name="description" content="在浏览器里直接格式化 SQL, 不上传到任何服务器。">
+<style>
+  :root{
+    --bg: #0e1116;
+    --panel: #161b22;
+    --panel-2: #1c232c;
+    --border: #2a323d;
+    --text: #e6edf3;
+    --muted: #8b98a5;
+    --accent: #59d9c4;
+    --accent-dim: #2e5a53;
+    --warn: #e8b54a;
+    --mono: "SFMono-Regular", "JetBrains Mono", Consolas, Menlo, "Liberation Mono", monospace;
+    --sans: -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  }
+  *{ box-sizing: border-box; }
+  html, body{ height: 100%; }
+  body{
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--sans);
+    display: flex;
+    flex-direction: column;
+  }
+
+  header{
+    padding: 22px 28px 16px;
+    border-bottom: 1px solid var(--border);
+    flex: 0 0 auto;
+  }
+  header .title-row{
+    display: flex;
+    align-items: baseline;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+  header h1{
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 600;
+    margin: 0;
+    letter-spacing: -0.02em;
+  }
+  header h1 .dot{ color: var(--accent); }
+  header p{
+    margin: 6px 0 0;
+    color: var(--muted);
+    font-size: 13.5px;
+    max-width: 680px;
+    line-height: 1.5;
+  }
+
+  .toolbar{
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 28px;
+    border-bottom: 1px solid var(--border);
+    flex-wrap: wrap;
+    flex: 0 0 auto;
+    background: var(--panel);
+  }
+  .toolbar label.opt{
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 13.5px;
+    color: var(--text);
+    cursor: pointer;
+    user-select: none;
+  }
+  .toolbar input[type=checkbox]{
+    width: 15px; height: 15px;
+    accent-color: var(--accent);
+    cursor: pointer;
+  }
+  .spacer{ flex: 1; }
+  button{
+    font-family: var(--sans);
+    font-size: 13.5px;
+    font-weight: 600;
+    padding: 8px 16px;
+    border-radius: 6px;
+    border: 1px solid var(--border);
+    background: var(--panel-2);
+    color: var(--text);
+    cursor: pointer;
+    transition: border-color .15s ease, background .15s ease;
+  }
+  button:hover{ border-color: var(--accent-dim); background: #202932; }
+  button.primary{
+    background: var(--accent);
+    color: #06211c;
+    border-color: var(--accent);
+  }
+  button.primary:hover{ background: #4bc9b4; }
+  button:disabled{ opacity: .45; cursor: not-allowed; }
+  button.ghost{ background: transparent; }
+
+  main{
+    flex: 1 1 auto;
+    display: flex;
+    min-height: 0;
+  }
+  .pane{
+    flex: 1 1 50%;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+    min-height: 0;
+  }
+  .pane + .pane{ border-left: 1px solid var(--border); }
+  .pane-head{
+    padding: 8px 16px;
+    font-family: var(--mono);
+    font-size: 11.5px;
+    letter-spacing: .04em;
+    color: var(--muted);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex: 0 0 auto;
+  }
+  .pane-head .count{ color: var(--muted); }
+  textarea, pre.output{
+    flex: 1 1 auto;
+    margin: 0;
+    padding: 16px 18px;
+    background: var(--bg);
+    color: var(--text);
+    font-family: var(--mono);
+    font-size: 13px;
+    line-height: 1.6;
+    border: none;
+    outline: none;
+    resize: none;
+    overflow: auto;
+    white-space: pre;
+    tab-size: 4;
+  }
+  pre.output{ white-space: pre-wrap; word-break: break-word; }
+  textarea::placeholder{ color: #4a5560; }
+
+  .status{
+    padding: 8px 28px;
+    font-size: 12.5px;
+    color: var(--muted);
+    border-top: 1px solid var(--border);
+    font-family: var(--mono);
+    flex: 0 0 auto;
+    min-height: 34px;
+    display: flex;
+    align-items: center;
+  }
+  .status.err{ color: #ff8a80; }
+  .status.ok{ color: var(--accent); }
+
+  footer{
+    padding: 10px 28px 16px;
+    font-size: 12px;
+    color: var(--muted);
+    text-align: center;
+  }
+  footer a{ color: var(--muted); }
+
+  @media (max-width: 860px){
+    main{ flex-direction: column; }
+    .pane + .pane{ border-left: none; border-top: 1px solid var(--border); }
+    .pane{ min-height: 280px; }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="title-row">
+    <h1>sql<span class="dot">.</span>format()</h1>
+  </div>
+  <p>把凌乱的 SQL 粘进左边，一键整理成统一风格。全部在你的浏览器里完成，不发送到任何服务器。</p>
+</header>
+
+<div class="toolbar">
+  <label class="opt">
+    <input type="checkbox" id="lowercaseToggle">
+    字段名 / 表名转小写
+  </label>
+  <div class="spacer"></div>
+  <button class="ghost" id="clearBtn">清空</button>
+  <button id="copyBtn">复制结果</button>
+  <button class="primary" id="formatBtn">格式化 →</button>
+</div>
+
+<main>
+  <section class="pane">
+    <div class="pane-head">
+      <span>输入 SQL</span>
+      <span class="count" id="inputCount">0 行</span>
+    </div>
+    <textarea id="input" placeholder="在这里粘贴你的 SQL ...&#10;&#10;select a.id,b.name from t1 a join t2 b on a.id=b.id where a.x='Y'"></textarea>
+  </section>
+  <section class="pane">
+    <div class="pane-head">
+      <span>格式化结果</span>
+      <span class="count" id="outputCount">0 行</span>
+    </div>
+    <pre class="output" id="output"></pre>
+  </section>
+</main>
+
+<div class="status" id="status">就绪</div>
+
+<footer>
+  纯前端运行, 代码不会上传 · <a href="https://github.com/" target="_blank" rel="noopener">在 GitHub 上查看源码</a>
+</footer>
+
+<script src="sql_formatter.js"></script>
+<script>
+(function(){
+  const input = document.getElementById('input');
+  const output = document.getElementById('output');
+  const inputCount = document.getElementById('inputCount');
+  const outputCount = document.getElementById('outputCount');
+  const status = document.getElementById('status');
+  const formatBtn = document.getElementById('formatBtn');
+  const copyBtn = document.getElementById('copyBtn');
+  const clearBtn = document.getElementById('clearBtn');
+  const lowercaseToggle = document.getElementById('lowercaseToggle');
+
+  function countLines(text){
+    if (!text) return 0;
+    return text.split('\n').length;
+  }
+
+  function updateCounts(){
+    inputCount.textContent = countLines(input.value) + ' 行';
+    outputCount.textContent = countLines(output.textContent) + ' 行';
+  }
+
+  function runFormat(){
+    const sql = input.value;
+    if (!sql.trim()){
+      output.textContent = '';
+      status.textContent = '就绪';
+      status.className = 'status';
+      updateCounts();
+      return;
+    }
+    try {
+      const formatted = window.SqlFormatter.formatSql(sql, lowercaseToggle.checked);
+      output.textContent = formatted;
+      status.textContent = '格式化完成';
+      status.className = 'status ok';
+    } catch (err) {
+      status.textContent = '格式化出错: ' + (err && err.message ? err.message : err);
+      status.className = 'status err';
+    }
+    updateCounts();
+  }
+
+  formatBtn.addEventListener('click', runFormat);
+
+  clearBtn.addEventListener('click', function(){
+    input.value = '';
+    output.textContent = '';
+    status.textContent = '就绪';
+    status.className = 'status';
+    updateCounts();
+    input.focus();
+  });
+
+  copyBtn.addEventListener('click', async function(){
+    if (!output.textContent){
+      status.textContent = '没有可复制的内容';
+      status.className = 'status err';
+      return;
+    }
+    try {
+      await navigator.clipboard.writeText(output.textContent);
+      status.textContent = '已复制到剪贴板';
+      status.className = 'status ok';
+    } catch (err) {
+      status.textContent = '复制失败, 请手动选择文本复制';
+      status.className = 'status err';
+    }
+  });
+
+  input.addEventListener('keydown', function(e){
+    if ((e.metaKey || e.ctrlKey) && e.key === 'Enter'){
+      e.preventDefault();
+      runFormat();
+    }
+  });
+
+  input.addEventListener('input', updateCounts);
+  updateCounts();
+})();
+</script>
+
+</body>
+</html>
