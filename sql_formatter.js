@@ -88,7 +88,7 @@
     "CASE", "WHEN", "THEN", "ELSE", "END", "OVER", "PARTITION",
     "ROWS", "RANGE", "UNBOUNDED", "PRECEDING", "FOLLOWING",
     "CURRENT", "ROW", "CAST", "USING", "ANY", "SOME", "INTERVAL",
-    "QUALIFY", "WINDOW", "FETCH", "FIRST", "NEXT", "ONLY",
+    "QUALIFY", "WINDOW", "FETCH", "FIRST", "NEXT", "ONLY", "ANTI"
   ]);
 
   const EXCLUDED_FUNCTIONS = new Set(["generate_hash64_key_column"]);
@@ -838,6 +838,8 @@
     [["SELECT"], "SELECT"],
     [["FROM"], "FROM"],
     [["LEFT", "OUTER", "JOIN"], "JOIN"],
+    [["LEFT", "ANIT", "JOIN"], "JOIN"],
+    [["ANTI", "JOIN"], "JOIN"],
     [["RIGHT", "OUTER", "JOIN"], "JOIN"],
     [["FULL", "OUTER", "JOIN"], "JOIN"],
     [["LEFT", "JOIN"], "JOIN"],
