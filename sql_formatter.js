@@ -81,6 +81,7 @@
   const KEYWORDS = new Set([
     "SELECT", "DISTINCT", "FROM", "WHERE", "AND", "OR", "NOT", "AS",
     "JOIN", "INNER", "LEFT", "RIGHT", "FULL", "OUTER", "CROSS", "ON",
+    "ANTI", "SEMI",
     "GROUP", "BY", "ORDER", "HAVING", "LIMIT", "OFFSET",
     "UNION", "ALL", "WITH", "IN", "IS", "NULL", "LIKE", "BETWEEN",
     "EXISTS", "INSERT", "INTO", "VALUES", "UPDATE", "SET", "DELETE",
@@ -88,7 +89,7 @@
     "CASE", "WHEN", "THEN", "ELSE", "END", "OVER", "PARTITION",
     "ROWS", "RANGE", "UNBOUNDED", "PRECEDING", "FOLLOWING",
     "CURRENT", "ROW", "CAST", "USING", "ANY", "SOME", "INTERVAL",
-    "QUALIFY", "WINDOW", "FETCH", "FIRST", "NEXT", "ONLY", "ANTI"
+    "QUALIFY", "WINDOW", "FETCH", "FIRST", "NEXT", "ONLY",
   ]);
 
   const EXCLUDED_FUNCTIONS = new Set(["generate_hash64_key_column"]);
@@ -838,10 +839,14 @@
     [["SELECT"], "SELECT"],
     [["FROM"], "FROM"],
     [["LEFT", "OUTER", "JOIN"], "JOIN"],
-    [["LEFT", "ANIT", "JOIN"], "JOIN"],
-    [["ANTI", "JOIN"], "JOIN"],
     [["RIGHT", "OUTER", "JOIN"], "JOIN"],
     [["FULL", "OUTER", "JOIN"], "JOIN"],
+    [["LEFT", "ANTI", "JOIN"], "JOIN"],
+    [["LEFT", "SEMI", "JOIN"], "JOIN"],
+    [["RIGHT", "ANTI", "JOIN"], "JOIN"],
+    [["RIGHT", "SEMI", "JOIN"], "JOIN"],
+    [["ANTI", "JOIN"], "JOIN"],
+    [["SEMI", "JOIN"], "JOIN"],
     [["LEFT", "JOIN"], "JOIN"],
     [["RIGHT", "JOIN"], "JOIN"],
     [["FULL", "JOIN"], "JOIN"],
